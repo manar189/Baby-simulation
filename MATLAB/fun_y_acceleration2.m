@@ -20,11 +20,13 @@ band_stretch_L = pdist([bandL_start; x,y], 'euclidean');
 stretch_dist_R = band_length - band_stretch_R;
 stretch_dist_L = band_length - band_stretch_L;
 
+stop_height = 0.5;
+r_max_stretch = 0.1;
 if(stretch_dist_R > 0)
-    stretch_dist_R = 0;
+    stretch_dist_R = min(r_max_stretch*exp(stretch_dist_R-stop_height), r_max_stretch);
 end
 if(stretch_dist_L > 0)
-    stretch_dist_L = 0;
+    stretch_dist_L = min(r_max_stretch*exp(stretch_dist_L-stop_height), r_max_stretch);
 end
 
 thetaR = atan2((bandR_start(2)-(y-bandR_end(2))),(bandR_start(1)-(x-bandR_end(1))));
