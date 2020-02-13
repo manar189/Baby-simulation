@@ -46,7 +46,6 @@ nKicks = [length(kickR), length(kickL)]
 
 %% 2 elastic bands
 
-
 runtime = 20;       % time of simulation [s]
 h = 0.01;           % step size
 kickAvgR = 0.2;     % right leg average number of kicks per second
@@ -59,8 +58,8 @@ v0 = 0.0;           % initial velocity
 theta = pi/4;       % initial angel
 
 N = runtime / h;
-uR = (rand(1, N) <= kickAvgR / (N/runtime)) * kickForceR;
-uL = (rand(1, N) <= kickAvgL / (N/runtime)) * kickForceL;
+uR = (rand(1, N) < kickAvgR / (N/runtime)) * kickForceR;
+uL = (rand(1, N) < kickAvgL / (N/runtime)) * kickForceL;
 
 z0 = [x0, v0*cos(theta), y0, v0*sin(theta)];
 u = [uR; uL];
