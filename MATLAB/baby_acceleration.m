@@ -4,7 +4,7 @@ g = 9.82;                   % gravitation [m/s^2]
 m = 9.0;                    % weight [kg] 
 k = 145.5;                  % spring constant [N/m]
 b = 8.0;                    % dampening [Ns/m]
-kfc = 15;                   % kick force constant
+kfc = 8;                   % kick force constant
 thetaR = 3*pi/8;            % kick angle right leg
 thetaL = 5*pi/8;            % kick angle left leg
 
