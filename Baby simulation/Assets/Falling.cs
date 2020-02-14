@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+//Hej
 
 public class Falling : MonoBehaviour
 {
