@@ -117,7 +117,7 @@ legend('x position', 'y position', 'angle', 'right kick', 'left kick', 'Location
 
 nKicks = [length(kickR), length(kickL)]
 
-%createMovie('rotBandKick5', z, h)
+%createMovie('rotBandKick', z, h)
 
 
 
