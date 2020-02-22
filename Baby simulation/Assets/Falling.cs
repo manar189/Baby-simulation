@@ -88,8 +88,8 @@ public class Falling : MonoBehaviour
         stretchDistL = minE(compLimit*Math.Exp(stretchDistL - compRange), compLimit);
       }
 
-      phiR = Math.Atan2((bandStartRY-(transform.position.y-bandEndRY)),(bandStartRX-(transform.position.x-bandEndRX)))*(180 / Math.PI);
-      phiL = Math.Atan2((bandStartLY-(transform.position.y-bandEndLY)),(bandStartLX-(transform.position.x-bandEndLX)))*(180 / Math.PI);
+      phiR = Math.Atan2((bandStartRY-(transform.position.y-bandEndRY)),(bandStartRX-(transform.position.x-bandEndRX)));
+      phiL = Math.Atan2((bandStartLY-(transform.position.y-bandEndLY)),(bandStartLX-(transform.position.x-bandEndLX)));
 
       //Get the right input
       if (Input.GetKey("right"))
