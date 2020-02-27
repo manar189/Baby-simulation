@@ -27,16 +27,19 @@ public class BabyMotion : MonoBehaviour
     public double kickAngleR = 3 * Math.PI / 8;
     public double kickAngleL = 5 * Math.PI / 8;
 
+
     public Vector2 bandStartR = new Vector2(-0.3f, 2.0f);
     public Vector2 bandStartL = new Vector2(0.3f, 2.0f);
     public Vector2 bandEndR;
     public Vector2 bandEndL;
     public Vector2 newBandEndR;
     public Vector2 newBandEndL;
-    public Vector2 babyPosition;
+    //public Vector2 babyPosition;
 
     public Vector2 legPosR;
     public Vector2 legPosL;
+    public Vector2 newLegPosR;
+    public Vector2 newLegPosL;
 
 
     //Band Specs
@@ -73,6 +76,8 @@ public class BabyMotion : MonoBehaviour
     {
         bandEndR = new Vector2((float)-babyRadius, 0.0f);
         bandEndL = new Vector2((float)babyRadius, 0.0f);
+        legPosR = new Vector2((float)-babyRadius, -babyLength/2);
+        legPosL = new Vector2((float)babyRadius, -babyLength/2);
 
     }
 
@@ -81,11 +86,18 @@ public class BabyMotion : MonoBehaviour
     void FixedUpdate()
     {
 
-        babyPosition.x = transform.position.x;
-        babyPosition.y = transform.position.y;
+            kickAngleR = 3 * Math.PI / 8 + babyAngle;
+            kickAngleL = 5 * Math.PI / 8 + babyAngle;
 
-        newBandEndR = calculateBandEnd(babyAngle, bandEndR, babyPosition);
-        newBandEndL = calculateBandEnd(babyAngle, bandEndL, babyPosition);
+        //babyPosition.x = transform.position.x;
+        //babyPosition.y = transform.position.y;
+
+        newBandEndR = rotatePoint(bandEndR, babyAngle); //removed transform.position / babyposition
+        newBandEndL = rotatePoint(bandEndL, babyAngle);//removed transform.position / babyposition
+        newBandEndR.x += transform.position.x;
+        newBandEndR.y += transform.position.y;
+        newBandEndL.x += transform.position.x;
+        newBandEndL.y += transform.position.y;
 
 
         bandLengthR = Vector2.Distance(bandStartR, bandEndR);
@@ -96,14 +108,16 @@ public class BabyMotion : MonoBehaviour
         stretchDistR = getStretchDistance(bandLengthR, bandStretchR);
 
 
-        bandAngleR = Math.Atan2((bandStartR.y-(transform.position.y-bandEndR.y)),(bandStartR.x-(transform.position.x-bandEndR.x)));
-        bandAngleL = Math.Atan2((bandStartL.y-(transform.position.y-bandEndL.y)),(bandStartL.x-(transform.position.x-bandEndL.x)));
+        bandAngleR = Math.Atan2((bandStartR.y - newBandEndR.y), (bandStartR.x - newBandEndR.x));
+        bandAngleL = Math.Atan2((bandStartL.y - newBandEndL.y), (bandStartL.x - newBandEndL.x));
 
-        legPosR.x = (float)transform.position.x - (float)babyRadius;
-        legPosR.y = (float)transform.position.y - 0.5f;
 
-        legPosL.x = (float)transform.position.x + (float)babyRadius;
-        legPosL.y = (float)transform.position.y - 0.5f;
+        newLegPosR = rotatePoint(legPosR, babyAngle); //removed transform.position / babyposition
+        newLegPosL = rotatePoint(legPosL, babyAngle);//removed transform.position / babyposition
+        newLegPosR.x += transform.position.x;
+        newLegPosR.y += transform.position.y;
+        newLegPosL.x += transform.position.x;
+        newLegPosL.y += transform.position.y;
 
         //Get the right input
         if (Input.GetKey("right"))
@@ -209,9 +223,9 @@ public class BabyMotion : MonoBehaviour
         return torque;
     }
 
-    Vector2 calculateBandEnd(double angle, Vector2 bandEnd, Vector2 position)
+    Vector2 rotatePoint(Vector2 vec, double angle)
     {
-
+        Vector2 result;
 
         float[] R = new float[4]; // är osäker här
         R[0] = (float)Math.Cos(angle);
@@ -219,12 +233,27 @@ public class BabyMotion : MonoBehaviour
         R[2] = (float)Math.Sin(angle);
         R[3] = (float)Math.Cos(angle);
 
-        Vector2 newEnd;
+        result.x = R[0] * vec.x - R[1] * vec.y + vec.x;
+        result.y = R[2] * vec.x + R[3] * vec.y + vec.y;
 
-        //right
-        newEnd.x = R[0] * bandEnd.x - R[1] * bandEnd.y + position.x;
-        newEnd.y = R[2] * bandEnd.x + R[3] * bandEnd.y + position.y;
+        return result;
+    }
 
+    Vector2 calculateBandEnd(double angle, Vector2 bandEnd)
+    {
+
+
+        //float[] R = new float[4]; // är osäker här
+        //R[0] = (float)Math.Cos(angle);
+        //R[1] = (float)-Math.Sin(angle);
+        //R[2] = (float)Math.Sin(angle);
+        //R[3] = (float)Math.Cos(angle);
+
+        Vector2 newEnd = rotatePoint(bandEnd, angle);
+
+        //all
+        //newEnd.x = R[0] * bandEnd.x - R[1] * bandEnd.y + transform.position.x;
+        //newEnd.y = R[2] * bandEnd.x + R[3] * bandEnd.y + transform.position.y;
 
 
         return newEnd;
@@ -236,20 +265,20 @@ public class BabyMotion : MonoBehaviour
     double angleAcceleration()
     {
 
-        float I = 1.0f / 4.0f * (float)m * (float)babyRadius* (float)babyRadius + 1.0f / 12.0f * (float)m * babyLength* babyLength;
+        float I = (1.0f / 4.0f) * (float)m * (float)Math.Pow(babyRadius, 2) + (1.0f / 12.0f) * (float)m * (float)Math.Pow(babyLength, 2);
 
-        double phiR = Math.Atan2((bandStartR.y - newBandEndR.y), (bandStartR.x - newBandEndR.x));
+        //double phiR = Math.Atan2((bandStartR.y - newBandEndR.y), (bandStartR.x - newBandEndR.x));
 
-        double phiL = Math.Atan2((bandStartL.y - newBandEndL.y), (bandStartL.x - newBandEndL.x));
+        //double phiL = Math.Atan2((bandStartL.y - newBandEndL.y), (bandStartL.x - newBandEndL.x));
 
         double bandForceR = k * stretchDistR;
         double bandForceL = k * stretchDistL;
 
 
-        double torqueKickR = getTorque(kickForce, legPosR, kickAngleR);
-        double torqueKickL = getTorque(kickForce, legPosL, kickAngleL);
-        double torqueBandR = getTorque(bandForceR, newBandEndR, phiR);
-        double torqueBandL = getTorque(bandForceL, newBandEndL, phiL);
+        double torqueKickR = getTorque(kickForce, newLegPosR, kickAngleR);
+        double torqueKickL = getTorque(kickForce, newLegPosL, kickAngleL);
+        double torqueBandR = getTorque(bandForceR, newBandEndR, bandAngleR);
+        double torqueBandL = getTorque(bandForceL, newBandEndL, bandAngleL);
 
         double alpha = -((torqueKickR + torqueKickL) * kfc + torqueBandR + torqueBandL + bw * angleVel) *kfc / I;
 
