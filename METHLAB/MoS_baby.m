@@ -37,3 +37,5 @@ nKicks = [length(kickR), length(kickL)]
 createMovie('RK1', z, h)
 
 
+
+

@@ -13,8 +13,12 @@ public class Falling : MonoBehaviour
   public double k = 145.5;
   public double b = 8.0;
   public double h = 0.01;
-  //Spec for inital band
-  //Right band
+
+
+  protected double babyAngle = 0.0; // vinkel på bebis, ny variabel från simon
+  protected double angleVel = 0.0; // vinkelhastighet på bebis, ny variabel från simon 
+    //Spec for inital band
+    //Right band
   protected double bandStartRX = -0.2;
   protected double bandStartRY = 2.0;
   protected double bandEndRX = -0.1;
@@ -40,13 +44,18 @@ public class Falling : MonoBehaviour
   //Specs for baby
   protected double InputRight = 0.0;
   protected double InputLeft = 0.0;
+  protected double radius = 0.15;
+  
   protected double AccX;
   protected double AccY;
   protected double VelX;
   protected double VelY;
   protected Vector2 velocity;
 
-  //Legs
+
+  protected float babyLength = 0.75f; //längd på bebis, ny variabel av simon
+
+    //Legs
   protected double angleR = 3*Math.PI/8;
   protected double angleL = 5*Math.PI/8;
   public double kick_force = 100.0;
@@ -63,6 +72,7 @@ public class Falling : MonoBehaviour
 
 
     }
+
 
     // Update is called once per frame
     void FixedUpdate()
@@ -88,15 +98,15 @@ public class Falling : MonoBehaviour
         stretchDistL = minE(compLimit*Math.Exp(stretchDistL - compRange), compLimit);
       }
 
-      phiR = Math.Atan2((bandStartRY-(transform.position.y-bandEndRY)),(bandStartRX-(transform.position.x-bandEndRX)))*(180 / Math.PI);
-      phiL = Math.Atan2((bandStartLY-(transform.position.y-bandEndLY)),(bandStartLX-(transform.position.x-bandEndLX)))*(180 / Math.PI);
+      phiR = Math.Atan2((bandStartRY-(transform.position.y-bandEndRY)),(bandStartRX-(transform.position.x-bandEndRX)));
+      phiL = Math.Atan2((bandStartLY-(transform.position.y-bandEndLY)),(bandStartLX-(transform.position.x-bandEndLX)));
 
       //Get the right input
       if (Input.GetKey("right"))
         {
           //Make the click last for one frame
           if(!isRclicked){
-            InputRight = 1.0 * kick_force;
+            InputRight = kick_force;
             isRclicked = true;
           }
           else{
@@ -113,7 +123,7 @@ public class Falling : MonoBehaviour
       {
         //Make the click last for one frame
         if(!isLclicked){
-          InputLeft = 1.0 * kick_force;
+          InputLeft = kick_force;
           isLclicked = true;
         }
         else{
@@ -136,17 +146,18 @@ public class Falling : MonoBehaviour
       VelX = VelX + (h * AccX);
       VelY = VelY + (h * AccY);
 
-      //För att han ska studsa och ha friktion på marken
-      //Krävs negativ acceleration på X
-      /*if( transform.position.y <= -2){
-
-        VelY = -1 * 0.5 * VelY; //Bäst att va på den säkra sidan
-
-        VelX = 0.3 * VelX;
-
-      }*/
 
       transform.Translate((float)VelX*0.01f, (float)VelY*0.01f, 0.0f);
+
+
+        //simon lade till nedan
+
+        //vinkel på bebis
+        babyAngle = angleOfBaby(transform.position.x, transform.position.y, babyAngle, angleVel);
+        //vinkelhastighet på bebis
+        angleVel = angleVel + (h * babyAngle);
+        //för att unity ska rotera bebis
+        transform.Rotate(0.0f, 0.0f, (float)babyAngle * 0.01f);
 
 
     }
@@ -166,7 +177,7 @@ public class Falling : MonoBehaviour
     }
 
 //Calculate the accelaration in X
-    double xAcc(double x, double y,double velocity, double uR, double uL){
+    double xAcc(double x, double y, double velocity, double uR, double uL){
 
 
       double u = inputX(y, uR, uL);
@@ -176,6 +187,128 @@ public class Falling : MonoBehaviour
       return a;
 
     }
+
+
+    /*
+     Kommande 3 funktioner har Simon lagt till
+         */
+
+    // lade till innan jag såg att fille hade gjort en euclidean distance calculator
+    double euclDist(Vector2 startpoint, Vector2 endpoint)
+    {
+
+        double dist = Math.Sqrt(Math.Pow((endpoint.x - startpoint.x), 2) + Math.Pow((endpoint.y - startpoint.y), 2));
+
+        return dist;
+    }
+
+
+    //hämta vridmomentet
+    double getTorque(double force, Vector2 forcePosition, double forceAngle, Vector2 centerOfMass)
+    {
+
+        double r = euclDist(centerOfMass, forcePosition);
+
+
+        double r_angle = Math.Atan2((forcePosition.y - centerOfMass.y), (forcePosition.x - centerOfMass.x));
+
+
+        double theta = forceAngle - r_angle;
+        double torque = force * r * Math.Sin(theta);
+
+        return torque;
+    }
+
+
+    //räkna ut nuvarande vinkel på bebis
+    double angleOfBaby(double x, double y, double angle, double w)
+    {
+
+        float I = 1.0f / 4.0f * (float)m * (float)radius* (float)radius + 1.0f / 12.0f * (float)m * babyLength* babyLength;
+
+        Vector2 legPosR; // pos of right leg
+        legPosR.x = (float)x - (float)radius;
+        legPosR.y = (float)y - 0.5f;
+
+        Vector2 legPosL; // pos of left leg
+        legPosL.x = (float)x + (float)radius;
+        legPosL.y = (float)y - 0.5f;
+
+        Vector2 CoM;
+        CoM.x = (float)x;
+        CoM.y = (float)y;
+
+        Vector2 bandStartR; //where the elastic band is fixed
+        bandStartR.x = -0.3f;
+        bandStartR.y = 2.0f;
+
+        Vector2 bandStartL; //where the elastic band is fixed
+        bandStartL.x = 0.3f;
+        bandStartL.y = 2.0f;
+
+        Vector2 bandEndR; //where band stops without weight
+        bandEndR.x = (float)-radius;
+        bandEndR.y = 0.0f;
+
+        Vector2 bandEndL; //where band stops without weight
+        bandEndL.x = (float)radius;
+        bandEndL.y = 0.0f;
+
+
+
+
+        float[] R = new float[4]; // är osäker här
+        R[0] = (float)Math.Cos(angle);
+        R[1] = (float)-Math.Sin(angle);
+        R[2] = (float)Math.Sin(angle);
+        R[3] = (float)Math.Cos(angle);
+
+        Vector2 newEndR; // är osäker här
+        newEndR.x = R[0]*bandEndR.x - R[1]*bandEndR.y + (float)x;
+        newEndR.y = R[2] * bandEndR.x + R[3] * bandEndR.y + (float)y;
+
+        Vector2 newEndL; // är osäker här
+        newEndL.x = R[0] * bandEndL.x - R[1] * bandEndL.y + (float)x;
+        newEndL.y = R[2] * bandEndL.x + R[3] * bandEndL.y + (float)y;
+
+
+        double bandLengthR = euclDist(bandStartR, bandEndR);
+        double bandLengthL = euclDist(bandStartL, bandEndL);
+        double bandStretchR = euclDist(bandStartR, newEndR);
+        double bandStretchL = euclDist(bandStartL, newEndL);
+        double stretchDistR = bandLengthR - bandStretchR;
+        double stretchDistL = bandLengthL - bandStretchL;
+
+        if (stretchDistR > 0)
+            stretchDistR = 0;
+        
+        if (stretchDistL > 0)
+            stretchDistL = 0;
+
+
+        double phiR = Math.Atan2((bandStartR.y - newEndR.y), (bandStartR.x - newEndR.x));
+
+        double phiL = Math.Atan2((bandStartL.y - newEndL.y), (bandStartL.x - newEndL.x));
+
+        double bandForceR = k * stretchDistR;
+        double bandForceL = k * stretchDistL;
+
+
+        double torqueKickR = getTorque(kick_force, legPosR, angleR, CoM);
+        double torqueKickL = getTorque(kick_force, legPosL, angleL, CoM);
+        double torqueBandR = getTorque(bandForceR, newEndR, phiR, CoM);
+        double torqueBandL = getTorque(bandForceL, newEndL, phiL, CoM);
+
+        double alpha = -((torqueKickR + torqueKickL) * kfc + torqueBandR + torqueBandL + 0.1 * w)*20 / I;
+
+        return alpha;
+    }
+
+    // här slutar Simons funktioner
+
+
+
+
 
 
 //Calculates the total distance between two points
@@ -206,5 +339,6 @@ public class Falling : MonoBehaviour
 
         return u;
       }
+
 
 }
