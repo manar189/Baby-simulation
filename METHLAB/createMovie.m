@@ -11,17 +11,17 @@ for k=1:N
     
     R = [cos(angle_k), -sin(angle_k); sin(angle_k), cos(angle_k)];
     
-    p1 = R*[0.05; 0.05];
-    p2 = R*[0.05; -0.05];
-    p3 = R*[-0.05; -0.05];
-    p4 = R*[-0.05; 0.05];
+    p1 = R*[0.15; 0.325];
+    p2 = R*[0.15; -0.325];
+    p3 = R*[-0.15; -0.325];
+    p4 = R*[-0.15; 0.325];
     
     figX = [x_k+p1(1) x_k+p2(1) x_k+p3(1) x_k+p4(1) x_k+p1(1)];
     figY = [y_k+p1(2) y_k+p2(2) y_k+p3(2) y_k+p4(2) y_k+p1(2)];
     
     plot(figX, figY, 'k', 'LineWidth', 2);
     hold on
-    axis([-0.5 0.5 -0.5 0.5]);
+    axis([-1 1 -1 1]);
     axis vis3d
 %     drawnow
 %     pause(0.01)
